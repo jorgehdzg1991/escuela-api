@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates a pipeline that deploys our API
+
+Parameters:
+  ProjectName:
+    Type: String
+  S3Bucket:
+    Type: String
+  RoleArn:
+    Type: String
+  RepoOwner:
+    Type: String
+  RepoName:
+    Type: String
+  BranchName:
+    Type: String
+  GithubOAuthToken:
+    Type: String
+
+Resources:
+  MyPipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub ${ProjectName}-pipeline
+      ArtifactStore:
+        Type: S3
+        Location: !Ref S3Bucket
+      RoleArn: !Ref RoleArn
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: GetSource
+              InputArtifacts: []
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Version: '1'
+                Provider: GitHub
+              OutputArtifacts:
+                - Name: source-out
+              Configuration:
+                Owner: !Ref RepoOwner
+                Repo: !Ref RepoName
+                Branch: !Ref BranchName
+                OAuthToken: !Ref GithubOAuthToken
+                PollForSourceChanges: false
+              RunOrder: 1
