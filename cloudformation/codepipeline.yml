@@ -28,6 +28,28 @@ Resources:
         BuildspecFile: buildspecs/lambda-build.yml
         RoleArn: !Ref RoleArn
         S3Bucket: !Ref S3Bucket
+  
+  CodeBuildTest:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${S3Bucket}.s3.amazonaws.com/codebuild-project.yml
+      Parameters:
+        ProjectName: !Ref ProjectName
+        BuildStep: unit-test
+        BuildspecFile: buildspecs/unit-test.yml
+        RoleArn: !Ref RoleArn
+        S3Bucket: !Ref S3Bucket
+  
+  CodeBuildLint:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${S3Bucket}.s3.amazonaws.com/codebuild-project.yml
+      Parameters:
+        ProjectName: !Ref ProjectName
+        BuildStep: lint
+        BuildspecFile: buildspecs/lint.yml
+        RoleArn: !Ref RoleArn
+        S3Bucket: !Ref S3Bucket
 
   MyPipeline:
     Type: AWS::CodePipeline::Pipeline
@@ -58,6 +80,34 @@ Resources:
               RunOrder: 1
         - Name: Build
           Actions:
+            - Name: Test
+              InputArtifacts:
+                - Name: source-out
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: '1'
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: test-out
+              Configuration:
+                ProjectName: !GetAtt CodeBuildTest.Outputs.BuildProject
+              RunOrder: 1
+
+            - Name: Lint
+              InputArtifacts:
+                - Name: source-out
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: '1'
+                Provider: CodeBuild
+              OutputArtifacts:
+                - Name: lint-out
+              Configuration:
+                ProjectName: !GetAtt CodeBuildLint.Outputs.BuildProject
+              RunOrder: 1
+
             - Name: LambdaBuild
               InputArtifacts:
                 - Name: source-out
@@ -70,5 +120,5 @@ Resources:
                 - Name: lambda-build-out
               Configuration:
                 ProjectName: !GetAtt CodeBuildLambda.Outputs.BuildProject
-              RunOrder: 1
+              RunOrder: 2
 
