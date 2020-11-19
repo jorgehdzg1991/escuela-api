@@ -60,7 +60,7 @@ Resources:
           Actions:
             - Name: LambdaBuild
               InputArtifacts:
-                - source-out
+                - Name: source-out
               ActionTypeId:
                 Category: Build
                 Owner: AWS
