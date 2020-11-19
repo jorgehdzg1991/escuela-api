@@ -1,0 +1,44 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Creates a codebuild project in which commands are run
+
+Parameters:
+  ProjectName:
+    Type: String
+  BuildStep:
+    Type: String
+  BuildspecFile:
+    Type: String
+  RoleArn:
+    Type: String
+  S3Bucket:
+    Type: String
+    Default: ""
+  CodeBuildImageType:
+    Type: String
+    Default: aws/codebuild/standard:3.0
+
+Resources:
+  CodeBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Name: !Sub ${ProjectName}-codebuild-${BuildStep}
+      ServiceRole: !Ref RoleArn
+      Artifacts:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Image: !Ref CodeBuildImageType
+        Type: LINUX_CONTAINER
+        EnvironmentVariables:
+          - Name: S3_BUCKET
+            Value: !Ref S3Bucket
+          - Name: S3_PREFIX
+            Value: !Sub lambda-packages/${ProjectName}
+      Source:
+        BuildSpec: !Ref BuildspecFile
+        Type: CODEPIPELINE
+
+Outputs:
+  BuildProject:
+    Value: !Ref CodeBuildProject
+    Description: Build configuration
