@@ -136,13 +136,13 @@ Resources:
                 ActionMode: CHANGE_SET_REPLACE
                 StackName: !Sub ${ProjectName}-deployment
                 Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
-                TemplatePath: build-out::deploy-master-packaged.yml
+                TemplatePath: lambda-build-out::deploy-master-packaged.yml
                 ParameterOverrides: !Sub
                   - |
                     {
                       "ProjectName": "${PROJECT_NAME}",
                       "LambdaLocationBucket": "${S3_BUCKET}",
-                      "ArtifactsPath": { "Fn::GetParam" : [ "build-out", "build.json", "ArtifactsLocation" ] }
+                      "ArtifactsPath": { "Fn::GetParam" : [ "lambda-build-out", "build.json", "ArtifactsLocation" ] }
                     }
                   - PROJECT_NAME: !Ref ProjectName
                     S3_BUCKET: !Ref S3Bucket
