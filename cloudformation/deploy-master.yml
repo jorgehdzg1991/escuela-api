@@ -18,13 +18,13 @@ Resources:
       Parameters:
         ProjectName: !Ref ProjectName
   
-  DeployIamLambdaRole:
-    Type: AWS::CloudFormation::Stack
-    Properties:
-      TemplateURL: !Sub https://${LambdaLocationBucket}.s3.amazonaws.com/${ArtifactsPath}/deploy-iam-lambda-role.yml
-      Parameters:
-        ProjectName: !Ref ProjectName
-        AlumnosTableArn: !GetAtt DeployDynamoDB.Outputs.AlumnosTableArn
+  # DeployIamLambdaRole:
+  #   Type: AWS::CloudFormation::Stack
+  #   Properties:
+  #     TemplateURL: !Sub https://${LambdaLocationBucket}.s3.amazonaws.com/${ArtifactsPath}/deploy-iam-lambda-role.yml
+  #     Parameters:
+  #       ProjectName: !Ref ProjectName
+  #       AlumnosTableArn: !GetAtt DeployDynamoDB.Outputs.AlumnosTableArn
   
   # ApiGatewayApi:
   #   Type: AWS::Serverless::Api
