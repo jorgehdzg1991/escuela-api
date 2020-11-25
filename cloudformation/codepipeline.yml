@@ -147,7 +147,7 @@ Resources:
                     }
                   - PROJECT_NAME: !Ref ProjectName
                     S3_BUCKET: !Ref S3Bucket
-                RoleArn: !Ref RoleArn
+              RoleArn: !Ref RoleArn
               RunOrder: 1
             - Name: ExecuteChangeSet
               ActionTypeId:
