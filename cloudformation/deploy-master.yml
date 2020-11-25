@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: escuela-api root deployment stack
+
+Parameters:
+  ProjectName:
+    Type: String
+
+Resources:
+  AlumnosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-alumnos
+      AttributeDefinitions:
+        - AttributeName: matricula
+          AttributeType: S
+      KeySchema:
+        - AttributeName: matricula
+          KeyType: HASH # es nuestra llave principal
+      BillingMode: PAY_PER_REQUEST
