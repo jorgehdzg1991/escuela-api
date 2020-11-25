@@ -122,3 +122,17 @@ Resources:
                 ProjectName: !GetAtt CodeBuildLambda.Outputs.BuildProject
               RunOrder: 2
 
+  WebhookPipeline:
+    Type: AWS::CodePipeline::Webhook
+    Properties:
+      Name: !Sub ${ProjectName}-webhook
+      Authentication: GITHUB_HMAC
+      AuthenticationConfiguration:
+        SecretToken: !Ref GithubOAuthToken
+      RegisterWithThirdParty: true
+      Filters:
+        - JsonPath: "$.ref"
+          MatchEquals: !Sub refs/heads/${BranchName}
+      TargetPipeline: !Ref MyPipeline
+      TargetAction: GetSource
+      TargetPipelineVersion: !GetAtt MyPipeline.Version
