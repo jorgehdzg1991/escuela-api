@@ -123,7 +123,7 @@ Resources:
               RunOrder: 2
         - Name: Deploy
           Actions:
-            - Name: ReplaceChangeSet
+            - Name: GenerateChangeSet
               InputArtifacts:
                 - Name: lambda-build-out
               ActionTypeId:
