@@ -1,0 +1,27 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Deploys DynamoDB tables required by the application
+
+Parameters:
+  ProjectName:
+    Type: String
+
+Resources:
+  AlumnosTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub ${ProjectName}-alumnos
+      AttributeDefinitions:
+        - AttributeName: matricula
+          AttributeType: S
+      KeySchema:
+        - AttributeName: matricula
+          KeyType: HASH
+      BillingMode: PAY_PER_REQUEST
+
+Outputs:
+  AlumnosTableArn:
+    Value: !GetAtt AlumnosTable.Arn
+    Description: ARN of the alumnos table
+  AlumnosTableName:
+    Value: !Ref AlumnosTable
+    Description: Name of the alumnos table
