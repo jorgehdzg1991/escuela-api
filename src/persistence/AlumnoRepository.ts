@@ -18,7 +18,9 @@ const alumnoSchema = new dynamoose.Schema({
 export default class AlumnoRepository implements Repository<Alumno> {
   // eslint-disable-next-line class-methods-use-this
   get db(): any {
-    return dynamoose.model('alumnos', alumnoSchema);
+    return dynamoose.model(process.env.ALUMNOS_TABLE || '', alumnoSchema, {
+      create: false
+    });
   }
 
   async create(alumno: Alumno): Promise<Alumno> {
