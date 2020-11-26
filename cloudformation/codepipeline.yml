@@ -78,6 +78,7 @@ Resources:
                 OAuthToken: !Ref GithubOAuthToken
                 PollForSourceChanges: false
               RunOrder: 1
+
         - Name: Build
           Actions:
             - Name: Test
