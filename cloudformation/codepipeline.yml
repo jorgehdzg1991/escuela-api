@@ -122,6 +122,45 @@ Resources:
                 ProjectName: !GetAtt CodeBuildLambda.Outputs.BuildProject
               RunOrder: 2
 
+        - Name: Deploy
+          Actions:
+            - Name: GenerateChangeSet
+              InputArtifacts:
+                - Name: lambda-build-out
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: CloudFormation
+              Configuration:
+                ChangeSetName: Deploy
+                ActionMode: CHANGE_SET_REPLACE
+                StackName: !Sub ${ProjectName}-deployment
+                Capabilities: CAPABILITY_NAMED_IAM,CAPABILITY_AUTO_EXPAND
+                TemplatePath: lambda-build-out::deploy-master-packaged.yml
+                ParameterOverrides: !Sub
+                  - |
+                    {
+                      "ProjectName": "${PROJECT_NAME}",
+                      "LambdaLocationBucket": "${S3_BUCKET}",
+                      "ArtifactsPath": { "Fn::GetParam" : [ "lambda-build-out", "build.json", "ArtifactsLocation" ] }
+                    }
+                  - PROJECT_NAME: !Ref ProjectName
+                    S3_BUCKET: !Ref S3Bucket
+                RoleArn: !Ref RoleArn
+              RunOrder: 1
+            - Name: ExecuteChangeSet
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: '1'
+                Provider: CloudFormation
+              Configuration:
+                ChangeSetName: Deploy
+                ActionMode: CHANGE_SET_EXECUTE
+                StackName: !Sub ${ProjectName}-deployment
+              RunOrder: 2
+
   WebhookPipeline:
     Type: AWS::CodePipeline::Webhook
     Properties:

@@ -11,8 +11,12 @@ phases:
       # build lambda code
       - yarn build
       - yarn install --production --modules-folder ./dist/node_modules
+<<<<<<< HEAD
 
       # package lambda (creates a zip file with the source code)
+=======
+      # package lambda
+>>>>>>> feature/add_deployment
       - >
         aws cloudformation package
         --template cloudformation/deploy-master.yml
@@ -20,6 +24,7 @@ phases:
         --s3-prefix $S3_PREFIX
         --output-template cloudformation/deploy-master-packaged.yml
         --region $AWS_REGION
+<<<<<<< HEAD
 
       # sync deployment templates to S3
       - >
@@ -37,6 +42,22 @@ phases:
       
       # create build output file
       - printf '{"ArtifactsLocation":"%s"}' $S3_PREFIX > build.json
+=======
+      # sync deployment templates
+      - >
+        aws s3 sync
+        cloudformation/
+        s3://$S3_BUCKET/$S3_PREFIX/
+        --exclude "*"
+        --include "deploy-*.yml"
+      - >
+        aws s3 cp
+        cloudformation/deploy-master-packaged.yml
+        s3://${S3_BUCKET}/${S3_PREFIX}/deploy-master-packaged.yml
+      
+      # output ArtifactsLocation in a build.json file
+      - printf '{"ArtifactsLocation":"%s"}' ${S3_PREFIX} > build.json
+>>>>>>> feature/add_deployment
 
 artifacts:
   files:

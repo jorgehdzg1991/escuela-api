@@ -1,19 +1,101 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: escuela-api root deployment stack
+Transform: AWS::Serverless-2016-10-31
+Description: escuela-api master stack
 
 Parameters:
   ProjectName:
     Type: String
+  LambdaLocationBucket:
+    Type: String
+  ArtifactsPath:
+    Type: String
 
 Resources:
-  AlumnosTable:
-    Type: AWS::DynamoDB::Table
+  DeployDynamoDB:
+    Type: AWS::CloudFormation::Stack
     Properties:
-      TableName: !Sub ${ProjectName}-alumnos
-      AttributeDefinitions:
-        - AttributeName: matricula
-          AttributeType: S
-      KeySchema:
-        - AttributeName: matricula
-          KeyType: HASH # es nuestra llave principal
-      BillingMode: PAY_PER_REQUEST
+      TemplateURL: !Sub https://${LambdaLocationBucket}.s3.amazonaws.com/${ArtifactsPath}/deploy-dynamodb.yml
+      Parameters:
+        ProjectName: !Ref ProjectName
+  
+  DeployIamLambdaRole:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: !Sub https://${LambdaLocationBucket}.s3.amazonaws.com/${ArtifactsPath}/deploy-iam-lambda-role.yml
+      Parameters:
+        ProjectName: !Ref ProjectName
+        AlumnosTableArn: !GetAtt DeployDynamoDB.Outputs.AlumnosTableArn
+  
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      DefinitionBody:
+        Fn::Transform:
+          Name: AWS::Include
+          Parameters:
+            Location: !Sub s3://${LambdaLocationBucket}/${ArtifactsPath}/deploy-proxy-api.yml
+      StageName: prod
+      Variables:
+        ServerlessExpressLambdaFunctionName: !Ref EscuelaApiLambda
+        Region: !Ref AWS::Region
+        AccountId: !Ref AWS::AccountId
+        ProjectName: !Ref ProjectName
+
+  LambdaApiGatewayExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt EscuelaApiLambda.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:execute-api:'
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref ApiGatewayApi
+          - "/*/*"
+  
+  LambdaApiGatewayExecutionPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt EscuelaApiLambda.Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn: !Join
+        - ''
+        - - 'arn:aws:execute-api:'
+          - !Ref AWS::Region
+          - ":"
+          - !Ref AWS::AccountId
+          - ":"
+          - !Ref ApiGatewayApi
+          - "/*/*"
+
+  EscuelaApiLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub ${ProjectName}-lambda
+      CodeUri: ../dist
+      Handler: lambda.handler
+      MemorySize: 128
+      Role: !GetAtt DeployIamLambdaRole.Outputs.LambdaRoleArn
+      Runtime: nodejs12.x
+      Timeout: 30
+      Events:
+        ProxyApiRoot:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /
+            Method: ANY
+        ProxyApiGreedy:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /{proxy+}
+            Method: ANY
+      Environment:
+        Variables:
+          ALUMNOS_TABLE: !GetAtt DeployDynamoDB.Outputs.AlumnosTableName
